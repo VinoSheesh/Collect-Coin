@@ -19,7 +19,7 @@ var scenePlay = new Phaser.Class({
   preload: function () {
     // Update paths to use direct references
     this.load.image("coin", "./assets/images/Koin.png");
-    this.load.image("coin_panel", "./assets/images/PanelC`oin.png");
+    this.load.image("coin_panel", "./assets/images/PanelCoin.png");
     this.load.image("background", "./assets/images/BG.png");
     this.load.image("btn_play", "./assets/images/ButtonPlay.png");
     this.load.image("gameover", "./assets/images/GameOver.png");
