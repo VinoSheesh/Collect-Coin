@@ -1,6 +1,5 @@
-![image](https://github.com/user-attachments/assets/50527907-beb9-44ec-9b69-1bed6f5d8a17)# CoinHunter
+## CoinHunter
 
-## 📖 Pengantar
 **CoinHunter** adalah game 2D berbasis Phaser di mana kamu akan mengendalikan karakter untuk mengumpulkan koin yang tersebar di seluruh peta. Namun, hati-hati! Ada musuh yang akan muncul, dan jika kamu terkena musuh, maka **Game Over**!
 
 ## 🎮 Cara Kontrol
