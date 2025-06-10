@@ -4,7 +4,8 @@ var scenePlay = new Phaser.Class({
   initialize: function () {
     Phaser.Scene.call(this, { key: "scenePlay" });
     this.gameStarted = false;
-    this.currentLevel = 1; // Add this line
+    this.currentLevel = 1;
+    this.countCoin = 0; // Initialize countCoin as scene property
     // Add checkpoint positions for each level
     this.checkpoints = {
       1: { x: 100, y: 500 },
@@ -16,23 +17,24 @@ var scenePlay = new Phaser.Class({
   init: function () {},
 
   preload: function () {
-    this.load.setBaseURL("assets/");
-    this.load.image("background", "images/BG.png");
-    this.load.image("btn_play", "images/ButtonPlay.png");
-    this.load.image("gameover", "images/GameOver.png");
-    this.load.image("stars", "images/star.png");
-    this.load.image("enemy1", "images/Musuh01.png");
-    this.load.image("enemy2", "images/Musuh02.png");
-    this.load.image("enemy3", "images/Musuh03.png");
-    this.load.image("ground", "images/Tile50.png");
-    this.load.audio("snd_coin", "audio/koin.mp3");
-    this.load.audio("snd_lose", "audio/kalah.mp3");
-    this.load.audio("snd_jump", "audio/lompat.mp3");
-    this.load.audio("snd_leveling", "audio/ganti_level.mp3");
-    this.load.audio("snd_walk", "audio/jalan.mp3");
-    this.load.audio("snd_touch", "audio/touch.mp3");
-    this.load.audio("music_play", "audio/music_play.mp3");
-    this.load.spritesheet("char", "images/CharaSpriteAnim.png", {
+    // Update paths to use direct references
+    this.load.image("coin", "./assets/images/Koin.png");
+    this.load.image("coin_panel", "./assets/images/PanelC`oin.png");
+    this.load.image("background", "./assets/images/BG.png");
+    this.load.image("btn_play", "./assets/images/ButtonPlay.png");
+    this.load.image("gameover", "./assets/images/GameOver.png");
+    this.load.image("enemy1", "./assets/images/Musuh01.png");
+    this.load.image("enemy2", "./assets/images/Musuh02.png");
+    this.load.image("enemy3", "./assets/images/Musuh03.png");
+    this.load.image("ground", "./assets/images/Tile50.png");
+    this.load.audio("snd_coin", "./assets/audio/koin.mp3");
+    this.load.audio("snd_lose", "./assets/audio/kalah.mp3");
+    this.load.audio("snd_jump", "./assets/audio/lompat.mp3");
+    this.load.audio("snd_leveling", "./assets/audio/ganti_level.mp3");
+    this.load.audio("snd_walk", "./assets/audio/jalan.mp3");
+    this.load.audio("snd_touch", "./assets/audio/touch.mp3");
+    this.load.audio("music_play", "./assets/audio/music_play.mp3");
+    this.load.spritesheet("char", "assets/images/CharaSpriteAnim.png", {
       frameWidth: 44.8,
       frameHeight: 93,
     });
@@ -41,6 +43,7 @@ var scenePlay = new Phaser.Class({
   create: function () {
     //variabel untuk menentukan apabila game sudah dimulai atau belum
     this.gameStarted = false;
+    
     //sound efek
     //menampung sound yang nanti dibunyikan ketika karakter menabrak koin
     this.snd_coin = this.sound.add("snd_coin");
@@ -66,8 +69,7 @@ var scenePlay = new Phaser.Class({
     this.music_play = this.sound.add("music_play");
     //membuat musik supaya bisa dimainkan secara terus menerus
     this.music_play.loop = true;
-    // Initialize the coin counter
-    var countCoin = 0;
+
     // Inisialisasi posisi X dan Y
     X_POSITION = {
       LEFT: 0,
@@ -89,26 +91,19 @@ var scenePlay = new Phaser.Class({
     // Menambahkan background langit biru dan gunung ke tengah layar
     this.add.image(X_POSITION.CENTER, Y_POSITION.CENTER, "background");
 
-    // Membuat tampilan koin
+    // FIXED: Membuat tampilan koin - diperbaiki dengan menyimpan referensi sebagai properti scene
     // Menambahkan panel koin
-    var coinPanel = this.add.image(X_POSITION.CENTER, 30, "coin_panel");
-    coinPanel.setDepth(10);
+    this.coinPanel = this.add.image(X_POSITION.CENTER, 30, "coin_panel");
+    this.coinPanel.setDepth(10);
 
-    // Menambahkan teks jumlah koin
-    var coinText = this.add.text(X_POSITION.CENTER, 30, "0", {
+    // Menambahkan teks jumlah koin - disimpan sebagai properti scene agar bisa diakses dari fungsi lain
+    this.coinText = this.add.text(X_POSITION.CENTER, 30, "0", {
       fontFamily: "Verdana, Arial",
       fontSize: "37px",
       color: "#adadad",
     });
-
-    coinText.setOrigin(0.5);
-    coinText.setDepth(10);
-
-    // Menyimpan scene aktif ke dalam variabel
-    var activeScene = this;
-
-    // Store countCoin as a property of the scene so it can be accessed in other functions
-    this.countCoin = countCoin;
+    this.coinText.setOrigin(0.5);
+    this.coinText.setDepth(10);
 
     //membuat tampilan sebelum game dimulai
     //menambahkan lapisan gelap dengan menggunakan objek rectangle
@@ -211,11 +206,8 @@ var scenePlay = new Phaser.Class({
       frameRate: 20,
     });
 
-    //membuat grup physics penampung sprite koin yang muncul
-    //di dalam game dengan menambahkan konfigurasi
-    //untuk menentukan jumlah dari koin dan menentukan
-    //posisi awal kemunculan koin
-    var coins = this.physics.add.group({
+    //FIXED: membuat grup physics penampung sprite koin - disimpan sebagai properti scene
+    this.coinsGroup = this.physics.add.group({
       //menentukan nama aset gambar yang akan ditambahkan sebagai sprite koin
       key: "coin",
       //menentukan jumlah pengulangan pembuatan koin (scr default dibuat 1)
@@ -226,17 +218,15 @@ var scenePlay = new Phaser.Class({
 
     //membuat koin baru sekaligus membuat koin bisa memantul
     //berdasarkan elastisitas yang ditentukan secara acak
-    coins.children.iterate(function (child) {
+    this.coinsGroup.children.iterate(function (child) {
       //membuat setiap koin yang dibuat akan memantul dengan
       //toleransi yang diacak mulai dari 0.2 s/d 0.3
       child.setBounceY(Phaser.Math.FloatBetween(0.2, 0.3));
     });
 
-    this.coinsGroup = coins;
-
     //menambahkan deteksi tubrukan antara koin dengan
     //pijakan berdasarkan hukum fisika
-    this.physics.add.collider(coins, platforms);
+    this.physics.add.collider(this.coinsGroup, platforms);
 
     //fungsi untuk menampilkan transisi jika sedang berganti level
     var newLevelTransition = function () {
@@ -279,13 +269,13 @@ var scenePlay = new Phaser.Class({
       });
     }.bind(this); // Bind this context to the function
 
-    //fungsi untuk mendeteksi ketika terjadi tubrukan antara koin dengan karakter
+    //FIXED: fungsi untuk mendeteksi ketika terjadi tubrukan antara koin dengan karakter
     var collectCoin = function (player, coin) {
       //menambahkan nilai sebanyak 10 koin baru ke dalam variabel 'countCoin'
       this.countCoin += 10;
 
-      //menampilkan jumlah koin pada teks dengan nama 'coinText'
-      coinText.setText(this.countCoin);
+      //FIXED: menampilkan jumlah koin pada teks dengan menggunakan this.coinText
+      this.coinText.setText(this.countCoin);
 
       //memainkan sound efek koin ketika terjadi
       //tubrukan antara karakter dengan koin
@@ -296,7 +286,8 @@ var scenePlay = new Phaser.Class({
       //parameter 2, 'true' untuk menyembunyikan objek
       coin.disableBody(true, true);
 
-      if (coins.countActive(true) === 0) {
+      //FIXED: menggunakan this.coinsGroup untuk pengecekan koin aktif
+      if (this.coinsGroup.countActive(true) === 0) {
         this.currentLevel++; // Increment level
         
         // Save checkpoint for current level (even beyond level 3)
@@ -328,12 +319,10 @@ var scenePlay = new Phaser.Class({
           },
         });
       }
-    };
+    }.bind(this); // Bind this context to the function
 
-    //melakukan pengecekan jika karakter utama
-    //melewati objek koin, maka fungsi dengan
-    //nama 'collectCoin' akan terpanggil
-    this.physics.add.overlap(this.player, coins, collectCoin, null, this);
+    //FIXED: melakukan pengecekan jika karakter utama melewati objek koin menggunakan this.coinsGroup
+    this.physics.add.overlap(this.player, this.coinsGroup, collectCoin, null, this);
 
     // Initially set the player to be static until game starts
     this.player.setVelocity(0, 0);
@@ -436,9 +425,8 @@ var scenePlay = new Phaser.Class({
         platforms.create(0 + relativeSize.w, 570, "ground");
       }
 
-      //menampilkan koin baru sekaligus membuat koin bisa memantul
-      //berdasarkan elastisitas yang ditentukan secara acak
-      coins.children.iterate(function (child) {
+      //FIXED: menampilkan koin baru menggunakan this.coinsGroup
+      this.coinsGroup.children.iterate(function (child) {
         //membuat setiap koin yang dibuat akan memantul dengan
         //toleransi yang diacak mulai dari 0.2 - 0.3
         child.setBounceY(Phaser.Math.FloatBetween(0.2, 0.3));
@@ -446,6 +434,7 @@ var scenePlay = new Phaser.Class({
         //dapat terkena efek gravitasi dan kemudian turun
         child.enableBody(true, child.x, -100, true, true);
       });
+      
       //melakukan pengecekan terhadap level yang sedang aktif,
       //jika level lebih dari 3, maka akan muncul musuh
       //di setiap pertambahan levelnya
@@ -480,8 +469,6 @@ var scenePlay = new Phaser.Class({
     this.physics.add.collider(enemies, platforms);
 
     //fungsi untuk mendeteksi ketika terjadi tubrukan antara musuh dengan karakter utama
-    // Replace existing hitEnemy function
-    // filepath: d:\Project Coding\COINHUNTER\scenePlay.js
     var hitEnemy = function (player, enemy) {
       // Stop physics and player movement
       this.physics.pause();
@@ -600,7 +587,7 @@ var scenePlay = new Phaser.Class({
     this.checkpointMarker = this.add.text(
       16,
       16,
-      "Checkpoint: Level " + this.currentLevel, // Changed from currentLevel
+      "Checkpoint: Level " + this.currentLevel,
       {
         fontSize: "24px",
         fill: "#fff",
@@ -613,7 +600,7 @@ var scenePlay = new Phaser.Class({
     this.events.on(
       "levelChange",
       function () {
-        this.checkpointMarker.setText("Checkpoint: Level " + this.currentLevel); // Changed from currentLevel
+        this.checkpointMarker.setText("Checkpoint: Level " + this.currentLevel);
       },
       this
     );
